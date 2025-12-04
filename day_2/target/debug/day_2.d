@@ -1,0 +1,1 @@
+/Users/joeyalvarado/Developer/rust/advent_of_code_2025/day_2/target/debug/day_2: /Users/joeyalvarado/Developer/rust/advent_of_code_2025/day_2/src/lib.rs /Users/joeyalvarado/Developer/rust/advent_of_code_2025/day_2/src/main.rs
