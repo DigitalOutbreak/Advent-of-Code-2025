@@ -3,47 +3,72 @@ use std::fs;
 fn main() {
     let data = fs::read_to_string("joltage.txt").unwrap();
     let banks = data.lines();
-    let mut total_output = 0;
+    let mut total_output: u64 = 0;
 
-    for (i, bank) in banks.enumerate() {
-        println!("-------- NEW BANK #{}--------", i);
-        //
-        // Set Init Values
-        let mut first_max_num: u32 = 0;
-        let mut first_i = 0;
-        let mut second_max_num: u32 = 0;
-        let mut second_i = 0;
+    // how many digits we must pick per bank (12 for part 2, 2 for part 1)
+    const K: usize = 12;
 
-        // First Highest Number Check
-        for (i, c) in bank.chars().enumerate() {
-            let current_num = c.to_digit(10).unwrap();
-            if current_num > first_max_num && i != bank.len() - 1 {
-                first_max_num = current_num;
-                first_i = i;
-            }
-        }
-        // Second Highest Number Check
-        for (i, c) in bank.chars().enumerate() {
-            let current_num = c.to_digit(10).unwrap();
-            if current_num > second_max_num && i > first_i {
-                second_max_num = current_num;
-                second_i = i;
-            }
+    for (bank_idx, bank) in banks.enumerate() {
+        println!("-------- BANK #{} --------", bank_idx + 1);
+
+        let mut chosen_digits: Vec<u32> = Vec::with_capacity(K);
+        let mut start_index: usize = 0; // where we’re allowed to start searching
+
+        // choose K digits, one by one
+        for chosen_so_far in 0..K {
+            let remaining_after_this = K - chosen_so_far - 1;
+            let (idx, digit) = pick_next_digit(bank, start_index, remaining_after_this);
+            chosen_digits.push(digit);
+            start_index = idx + 1; // next picks must be to the right
         }
 
-        let max_joltage = (first_max_num * 10) + second_max_num;
-        total_output += max_joltage;
+        // turn the chosen digits into a number
+        let mut bank_joltage: u64 = 0;
+        for d in &chosen_digits {
+            bank_joltage = bank_joltage * 10 + (*d as u64);
+        }
 
-        // Terminal Output
-        println!(
-            "First Max Num: {}, at Index: {}\nSecond Max Num: {}, at Index {}",
-            first_max_num, first_i, second_max_num, second_i,
-        );
-        println!("Total Batteries: {}", bank.len());
-        println!("Bank Max Joltage: {}", max_joltage);
+        total_output += bank_joltage;
 
-        //
-        //
+        println!("Bank:          {}", bank);
+        println!("Chosen digits: {:?}", chosen_digits);
+        println!("Bank joltage:  {}", bank_joltage);
+        println!();
     }
+
     println!("Total Output: {}", total_output);
 }
+
+/// Pick the next best digit:
+/// - `start_index`: we can only pick at or after this index
+/// - `remaining_after`: how many digits we still need *after* this one
+fn pick_next_digit(bank: &str, start_index: usize, remaining_after: usize) -> (usize, u32) {
+    let len = bank.len();
+
+    // Farthest index we’re allowed to pick from:
+    // if we pick at i, we need `remaining_after` chars *after* i
+    let max_index = len - remaining_after - 1;
+
+    let mut best_digit: u32 = 0;
+    let mut best_index: usize = start_index;
+
+    // look only in [start_index ..= max_index]
+    for (i, c) in bank
+        .chars()
+        .enumerate()
+        .skip(start_index)
+        .take(max_index - start_index + 1)
+    {
+        let current_num = c.to_digit(10).unwrap();
+        if current_num > best_digit {
+            best_digit = current_num;
+            best_index = i;
+        }
+    }
+
+    (best_index, best_digit)
+}
+
+// Gave up and USED AI for this one, got close though before giving up.
+//
+// Going back to studying Rust Syntex and Algo's. Will come back and try again in the future.
